@@ -15,12 +15,6 @@ pipeline {
             }
         }
         
-        stage('git clone') {
-            steps {
-                git credentialsId: 'credential-ssh', url: '${git_repo}', branch: '${branch_name}'
-            }
-        }
-        
         stage('Building Image') {
             steps {
               sh '''
@@ -40,14 +34,6 @@ pipeline {
         }
         }
         
-        stage('Create ECS Cluster') {
-            steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS CRED']]){
-                    sh "aws ecs create-cluster --cluster-name $CLUSTER_NAME"
-                }
-            }
-        }
-    }
     post{
         always{
             echo 'I will always say hello again!'
