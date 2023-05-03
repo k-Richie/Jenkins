@@ -21,7 +21,6 @@ pipeline {
                  pwd
                  sudo docker build -t myimg:${BUILD_NUMBER} .
                  '''
-                
             }
         }
         stage('Push') {
@@ -32,11 +31,6 @@ pipeline {
                  sh 'sudo docker tag myimg:${BUILD_NUMBER} 864543196770.dkr.ecr.ap-south-1.amazonaws.com/myimg:${BUILD_NUMBER}'
                  sh 'sudo docker push 864543196770.dkr.ecr.ap-south-1.amazonaws.com/myimg:${BUILD_NUMBER}'}
         }
-        }
-        
-    post{
-        always{
-            echo 'I will always say hello again!'
         }
     }
     }
