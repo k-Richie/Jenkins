@@ -17,9 +17,10 @@ pipeline {
         
         stage('Building Image') {
             steps {
+              def dockerfile = readFile 'Dockerfile'
               sh '''
                  pwd
-                 sudo docker build -t myimg:${BUILD_NUMBER} .
+                 sudo docker build -t myimg:${BUILD_NUMBER} .  <<EOF\n${dockerfile}\nEOF"
                  '''
             }
         }
