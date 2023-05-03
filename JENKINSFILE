@@ -15,29 +15,12 @@ pipeline {
             }
         }
         
-         stage('Checkout') {
-      steps {
-        // checkout the Git repository
-        checkout([$class: 'GitSCM', 
-                  branches: [[name: '*/main']], 
-                  userRemoteConfigs: [[url: 'https://github.com/k-Richie/Jenkins.git']]])
-      }
-    }
-        
-        stage('Building Image') {
-            steps {
-              def dockerfile = readFile 'Dockerfile'
-              sh '''
-                 pwd
-                 sudo docker build -t myimg:${BUILD_NUMBER} . <<EOF\n${dockerfile}\nEOF
-                 '''
-            }
-        }
         stage('Push') {
         steps {
                 // Push the Docker image to the registry
              withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS CRED', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                  sh 'aws ecr get-login-password --region ap-south-1 | sudo docker login --username AWS --password-stdin 864543196770.dkr.ecr.ap-south-1.amazonaws.com'
+                 sh 'sudo docker build -t myimg:${BUILD_NUMBER} .'
                  sh 'sudo docker tag myimg:${BUILD_NUMBER} 864543196770.dkr.ecr.ap-south-1.amazonaws.com/myimg:${BUILD_NUMBER}'
                  sh 'sudo docker push 864543196770.dkr.ecr.ap-south-1.amazonaws.com/myimg:${BUILD_NUMBER}'}
         }
