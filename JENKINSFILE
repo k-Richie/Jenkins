@@ -1,0 +1,56 @@
+pipeline {
+    agent { label "${node_name}" }
+        
+    stages {
+        stage('clean workspace'){
+            steps {
+                cleanWs()
+            }
+        }
+        
+        stage('Hello') {
+            steps {
+                echo 'Hello World'
+                //sleep 300;
+            }
+        }
+        
+        stage('git clone') {
+            steps {
+                git credentialsId: 'credential-ssh', url: '${git_repo}', branch: '${branch_name}'
+            }
+        }
+        
+        stage('Building Image') {
+            steps {
+              sh '''
+                 pwd
+                 sudo docker build -t myimg:${BUILD_NUMBER} .
+                 '''
+                
+            }
+        }
+        stage('Push') {
+        steps {
+                // Push the Docker image to the registry
+             withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS CRED', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                 sh 'aws ecr get-login-password --region ap-south-1 | sudo docker login --username AWS --password-stdin 864543196770.dkr.ecr.ap-south-1.amazonaws.com'
+                 sh 'sudo docker tag myimg:${BUILD_NUMBER} 864543196770.dkr.ecr.ap-south-1.amazonaws.com/myimg:${BUILD_NUMBER}'
+                 sh 'sudo docker push 864543196770.dkr.ecr.ap-south-1.amazonaws.com/myimg:${BUILD_NUMBER}'}
+        }
+        }
+        
+        stage('Create ECS Cluster') {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS CRED']]){
+                    sh "aws ecs create-cluster --cluster-name $CLUSTER_NAME"
+                }
+            }
+        }
+    }
+    post{
+        always{
+            echo 'I will always say hello again!'
+        }
+    }
+    }
